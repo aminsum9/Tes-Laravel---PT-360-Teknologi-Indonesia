@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Price;
+use App\Models\PriceDetail;
 use Illuminate\Http\Request;
 use App\Models\Product;
 
@@ -11,18 +13,34 @@ class ProductController extends Controller
 
     public function get_products(Request $request){
 
-        $keyword = $request->input('keyword');
-        $tier = $request->input('tier');
-        $productCategory = $request->input('product_category');
+        $keyword = $request->query('keyword');
+        $tier = $request->query('tier');
+        $productCategory = $request->query('product_category');
+        $paging = $request->input('paging');
 
-        $query = Product::query();
-
-        if(!empty($keyword) || !empty($tier) || !empty($productCategory))
+        $query = Product::with('Price.PriceDetail');
+        // $query = Product::query();
+        
+        if(!empty($keyword))
         {
-            // 
+            $query = $query->where('Name','LIKE','%'.$keyword.'%');
         }
 
-        $query = $query->paginate();
+        if(!empty($tier))
+        {
+            $query = $query->whereHas('Price.PriceDetail',function($q) use ($tier){
+                $q->where('Tier','=',$tier);
+            });
+        }
+
+        if(!empty($productCategory))
+        {
+            $query = $query->whereHas('Price',function($q) use ($productCategory){
+                $q->where('Product_Category','=',$productCategory);
+            });
+        }
+
+        $query = $query->paginate($paging);
 
         return response()->json([
             'success' => true,
@@ -71,6 +89,7 @@ class ProductController extends Controller
         $name = $request->input('Name');
         $productCategory = $request->input('Product_Category');
         $description = $request->input('Description');
+        $productPrices = $request->input('ProductPrices');
 
         if(empty($name))
         {
@@ -105,6 +124,31 @@ class ProductController extends Controller
 
         if($query->save())
         {
+
+            if(!empty($productPrices))
+            {
+                foreach ($productPrices as $key => $value) {
+                    $price = new Price();
+                    
+                    $price->Product_Id = $query->Id;
+                    $price->Unit = $value['Unit'];
+
+                    if($price->save())
+                    {   
+                        foreach ($value['PriceDetails'] as $key => $valPriceDetail) {
+                            
+                            $priceDetail = new PriceDetail();
+    
+                            $priceDetail->Price_Id =  $price->Id;
+                            $priceDetail->Tier =  $valPriceDetail['Tier'];
+                            $priceDetail->Price =  $valPriceDetail['Price'];
+    
+                            $priceDetail->save();
+                        }
+                    }
+                }
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Berhasil menambah data produk',

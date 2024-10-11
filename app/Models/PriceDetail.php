@@ -14,6 +14,9 @@ class PriceDetail extends Model
      *
      * @var array
      */
+
+    protected $primaryKey = 'Id';
+
     protected $table = 'PriceDetail';
 
     protected $fillable = [
@@ -21,5 +24,7 @@ class PriceDetail extends Model
         'Tier',
         'Price',
     ];
+
+    public $timestamps = false;
     
 }

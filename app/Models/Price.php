@@ -14,12 +14,17 @@ class Price extends Model
      *
      * @var array
      */
+    
+    protected $primaryKey = 'Id';
+
     protected $table = 'Price';
 
     protected $fillable = [
         'Product_Id',
         'Unit',
     ];
+
+    public $timestamps = false;
 
     /**
      * The attributes excluded from the model's JSON form.
@@ -28,7 +33,7 @@ class Price extends Model
      */
 
     public function PriceDetail(){
-        return $this->hasMany(PriceDetail::class, 'Product_Id', 'Id');
+        return $this->hasMany(PriceDetail::class, 'Price_Id', 'Id');
     }
 
 }
