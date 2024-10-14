@@ -169,6 +169,7 @@ class ProductController extends Controller
         $name = $request->input('Name');
         $productCategory = $request->input('Product_Category');
         $description = $request->input('Description');
+        $productPrices = $request->input('ProductPrices');
 
         if(empty($id))
         {
@@ -222,6 +223,48 @@ class ProductController extends Controller
 
         if($updateProduct)
         {
+
+            if(!empty($productPrices))
+            {
+                foreach ($productPrices as $key => $value) {
+
+                    if(!empty($value['Id'])){
+                        $price = Price::where("Id","=",$value['Id'])->update([
+                            "Unit" => $value['Unit']
+                        ]);
+ 
+                        foreach ($value['PriceDetails'] as $key => $valPriceDetail) {
+                            
+                            $priceDetail = PriceDetail::where("Id","=",$valPriceDetail["Id"])->update([
+                                "Tier" =>  $valPriceDetail['Tier'],
+                                "Price" =>  $valPriceDetail['Price']
+                            ]);
+
+                        }
+
+                    } else {
+                        $price = new Price();
+                    
+                        $price->Product_Id = $query->Id;
+                        $price->Unit = $value['Unit'];
+    
+                        if($price->save())
+                        {   
+                            foreach ($value['PriceDetails'] as $key => $valPriceDetail) {
+                                
+                                $priceDetail = new PriceDetail();
+        
+                                $priceDetail->Price_Id =  $price->Id;
+                                $priceDetail->Tier =  $valPriceDetail['Tier'];
+                                $priceDetail->Price =  $valPriceDetail['Price'];
+        
+                                $priceDetail->save();
+                            }
+                        }
+                    }
+                    
+                }
+            }
 
             $updatedProduct = Product::find($id);
 
