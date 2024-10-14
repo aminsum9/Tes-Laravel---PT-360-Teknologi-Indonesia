@@ -304,6 +304,14 @@ class ProductController extends Controller
                 'data' => (object)[]
             ]);
         }
+        
+        $prices = Price::where('Product_Id','=',$id)->get();
+        
+       foreach ($prices as $key => $value) {
+            PriceDetail::where("Price_Id","=",$value->Id)->delete();
+       }
+
+        Price::where('Product_Id','=',$id)->delete();
 
         Product::where('Id','=',$id)->delete();
 
