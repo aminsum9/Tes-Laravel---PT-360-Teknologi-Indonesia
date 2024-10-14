@@ -1,2 +1,3 @@
 - using php 8.2.14
 - using laravel 11
+- file import sql server = sql-server-product_app_db.bacpac
